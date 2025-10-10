@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.io import arff
 from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 from sklearn.preprocessing import StandardScaler
+import opti_k_means
 
 def load_arff_data(file_path):
     """Load numeric data from .arff and return as NumPy array."""
@@ -25,14 +26,9 @@ if __name__ == "__main__":
     X = load_arff_data(arff_file)
     print("Shape du dataset :", X.shape)
 
-<<<<<<< Updated upstream
-    import opti_k_means
+
+
     kmeans, k = opti_k_means.elbow_kmeans(X)
     labels = kmeans.predict(X)
-=======
-    k = 2
-    kmeans = KMeans(n_clusters=k, random_state=42)
-    labels = kmeans.fit_predict(X)
->>>>>>> Stashed changes
 
     plot_clusters(X, labels, f"KMeans (k={k})")
