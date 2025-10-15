@@ -5,6 +5,7 @@ from scipy.io import arff
 from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 from sklearn.preprocessing import StandardScaler
 import opti_k_means
+import solution_eval
 
 def load_arff_data(file_path):
     """Load numeric data from .arff and return as NumPy array."""
@@ -21,14 +22,31 @@ def plot_clusters(data, labels, title):
     plt.grid(True)
     plt.show()
 
+def plot_eval(scores, scorech, scoredb):
+    # TODO: plot
+    pass
+
 if __name__ == "__main__":
+    print("start")
     arff_file = os.path.join('dataset', 'artificial', 'diamond9.arff')
     X = load_arff_data(arff_file)
     print("Shape du dataset :", X.shape)
 
 
-
+    print("dataset read")
+    
     kmeans, k = opti_k_means.elbow_kmeans(X)
+    print(f"k found ({k})")
     labels = kmeans.predict(X)
+
+    print("prediction done")
+
+    scores, scorech, scoredb = solution_eval.evaluer_clustering(X, labels)
+
+    print("evaluation done")
+
+    print(f"silouhette_score={scores}")
+    print(f"calinski_harabasz_score={scorech}")
+    print(f"davies_bouldin_score={scoredb}")
 
     plot_clusters(X, labels, f"KMeans (k={k})")

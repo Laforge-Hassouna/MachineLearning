@@ -1,5 +1,7 @@
 import numpy as np
+
 from sklearn.cluster import KMeans
+from Method import Method
 
 def elbow_kmeans(data, k_max=10):
     """
@@ -29,3 +31,13 @@ def elbow_kmeans(data, k_max=10):
     kmeans: KMeans = kmeans_liste[meilleur_k-1]
 
     return kmeans, meilleur_k
+
+class KMeansMethod(Method):
+
+    def predict(self, X):
+        kmean_inst, _ = elbow_kmeans(X, 10)
+        labels = kmean_inst.predict(X)
+        return labels
+
+    def __repr__(self):
+        return "k-means"
