@@ -1,0 +1,4 @@
+dataset,metric_eval,min_cluster_size,min_samples,metric,cluster_selection_method,score
+cluto-t5-8k,silhouette,10,,euclidean,eom,0.3058843800504177
+cluto-t5-8k,calinski_harabasz,10,,euclidean,eom,8938.90914144067
+cluto-t5-8k,davies_bouldin,2,5.0,euclidean,eom,1.4126238589552358

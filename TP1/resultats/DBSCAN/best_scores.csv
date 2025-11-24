@@ -1,0 +1,4 @@
+dataset,metric_eval,eps,min_samples,metric,score
+cluto-t7-10k,silhouette,0.15714285714285714,20,euclidean,0.2583960805979178
+cluto-t7-10k,calinski_harabasz,0.08571428571428572,20,euclidean,2370.1610263607377
+cluto-t7-10k,davies_bouldin,0.1392857142857143,2,euclidean,0.7342896487217984

@@ -11,3 +11,11 @@
 |                          |                |                    |            |                |                 |
 | **Dbscan 1.2 eps pour 8**| 1.49           | 381.46             | 0.47       | 1006.2 ms      | sizes4          |
 | **Hdbscan 8**            | 1.43           | 433.62             | 0.49       | 2602.85 ms     | sizes4          |
+
+
+
+| Dataset     | Metric Eval        | Min Cluster Size | Min Samples | Metric    | Cluster Selection | Score    |
+|-------------|---------------------|------------------|-------------|-----------|-------------------|----------|
+| cluto-t5-8k | silhouette          | 10               | —           | euclidean | eom               | 0.306    |
+| cluto-t5-8k | calinski_harabasz   | 10               | —           | euclidean | eom               | 8938.909 |
+| cluto-t5-8k | davies_bouldin      | 2                | 5           | euclidean | eom               | 1.413    |
