@@ -1,5 +1,26 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+
+def normalize_features(X, features, method="standard"):
+    """
+    Normalize numerical features in X.
+    method: "standard" -> StandardScaler (mean=0, std=1)
+            "minmax"   -> MinMaxScaler (0 to 1)
+    """
+
+    if method == "standard":
+        scaler = StandardScaler()
+    elif method == "minmax":
+        scaler = MinMaxScaler()
+    else:
+        raise ValueError("Unknown normalization method. Use 'standard' or 'minmax'.")
+
+    # Fit + transform numerical features
+    X[features] = scaler.fit_transform(X[features])
+
+    return X
 
 
 def binarize_features(df, features_to_bin: list[str]):

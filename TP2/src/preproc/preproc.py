@@ -15,8 +15,6 @@ def read_features_and_labels(features_path, labels_path):
 def preprocess_data(X, y):
     """
     Apply preprocessing steps to features and labels.
-
-    Replace the body of this function with your real preprocessing logic.
     """
     acsincome_features_to_bin = ['COW', 'MAR', 'OCCP', 'POBP', 'RELP', 'RAC1P']
     X = ppl.binarize_features(X, acsincome_features_to_bin)
