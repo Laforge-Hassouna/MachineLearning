@@ -1,0 +1,1165 @@
+\documentclass{report}
+
+% Packages nécessaires
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage[french]{babel}
+\usepackage[english]{babel}
+\usepackage{titlesec}
+%\usepackage{algorithm}
+%\usepackage{algorithmic}
+\usepackage{tocloft}
+\usepackage{lipsum} % Package de remplissage de texte (à retirer dans le rapport final)
+\usepackage{graphicx}
+\usepackage{float} % pour l'option de placement [H]
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=green]{hyperref}
+\usepackage{minted} % pour la coloration syntaxique
+\usepackage{lipsum}
+\usepackage{wrapfig}   % Pour l'enroulement du texte autour des images
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{pgfplots}
+ \usepackage{amsmath}
+\usepackage{booktabs}
+\lstdefinestyle{pythonStyle}{
+  language=Python,
+  backgroundcolor=\color{gray!5},
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue}\bfseries,
+  stringstyle=\color{orange!90!black},
+  commentstyle=\color{gray}\itshape,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{black!30},
+  showspaces=false,
+  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=4,
+  captionpos=b
+}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Configuration de la page
+\usepackage[a4paper, left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm]{geometry}
+
+% Pour avoir le petit dessin de l'INSA en bas à droite de chaque page
+\usepackage{background}
+\backgroundsetup{
+scale=1,
+angle=0,
+opacity=1,
+color=black,
+contents={\begin{tikzpicture}[remember picture,overlay]
+\node at ([xshift=-0.8in,yshift=0.8in] current page.south east) % Adjust the position of the logo.
+{\includegraphics[scale=0.8]{images/pattern.png}}; % logo goes here
+\end{tikzpicture}}
+}
+
+
+% Configuration des titres des sections et sous-sections
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+% Configuration de la table des matières
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftsecfont}{\normalfont}
+\renewcommand{\cftsubsecfont}{\normalfont}
+\renewcommand{\cftchappagefont}{\bfseries}
+\renewcommand{\cftsecpagefont}{\normalfont}
+\renewcommand{\cftsubsecpagefont}{\normalfont}
+\setlength{\cftbeforetoctitleskip}{0pt}
+\setlength{\cftaftertoctitleskip}{13pt}
+\renewcommand{\contentsname}{Table des matières}
+
+
+\begin{document}
+% Page de titre
+\begin{titlepage}
+    \centering
+
+    % Minipages pour les logos
+    \noindent % Assure qu'il n'y a pas d'indentation au début de la ligne
+    \begin{minipage}{0.8\textwidth}
+        \includegraphics[width=0.5\linewidth]{images/logo_INSA.png} % Ajustez le chemin et la taille
+    \end{minipage}%
+    \hfill % Assure que les deux minipages seront poussés à l'extrême gauche et droite
+
+
+    \vspace*{2cm} % Espace vertical de 2 cm
+    {\Huge\bfseries Apprentissage supervisé  \par}
+    \vspace{1cm}
+    {\huge Compte rendu des séances de TP d'apprentissage supervisé \par}
+    \vspace{2cm}
+    {\Large \textbf{Hassouna Mohamed Amine -- Laforge Mateo } \par}
+    
+    \vspace{2cm}
+    
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/images.png}
+    \end{figure}
+    
+    \vfill
+    {\Large \textbf{Institut National des Sciences Appliquées de Toulouse} \par}
+    \vspace{1cm}
+    {\large \today \par}
+\end{titlepage}
+
+
+\tableofcontents  % <-- Table des matières
+
+\newpage
+\chapter{Introduction}
+Ce travail s’intéresse à la prédiction du niveau de revenu à partir de données socio-démographiques issues de l’\textit{American Community Survey}.  
+L’objectif est de comparer plusieurs modèles d’apprentissage automatique basés sur des arbres de décision afin d’évaluer leurs performances prédictives sur le jeu de données \textit{ACSIncome}.
+
+\chapter{Analyse et préparation du jeu de données ACSIncome}
+
+\section{Description du jeu de données}
+
+Chaque observation du jeu de données \textit{ACSIncome} correspond à un individu adulte résidant en Californie en 2018.  
+La variable cible est le revenu annuel \texttt{PINCP}, transformé en une variable binaire indiquant si le revenu est supérieur à 50\,000\$.
+
+\section{Analyse des attributs}
+
+Les attributs peuvent être regroupés en plusieurs catégories selon leur nature.
+
+\subsection{Attributs numériques}
+
+\begin{itemize}
+    \item \textbf{AGEP (âge)} : valeurs comprises entre 16 et 99 ans.  
+    La distribution est concentrée entre 25 et 65 ans, correspondant à la population active. Une corrélation positive modérée avec le revenu est observée jusqu’à un certain âge.
+
+    \item \textbf{WKHP (heures travaillées par semaine)} : variable numérique discrète.  
+    La distribution présente un pic autour de 40 heures hebdomadaires, caractéristique du travail à temps plein. Cette variable est fortement corrélée positivement au revenu.
+\end{itemize}
+
+\subsection{Attribut ordinal}
+
+\begin{itemize}
+    \item \textbf{SCHL (niveau d’éducation)} : variable ordinale allant de l’absence de scolarité jusqu’au doctorat.  
+    La majorité des individus possède un niveau lycée ou \textit{bachelor}. Cette variable est l’une des plus explicatives du revenu : un niveau d’éducation élevé augmente significativement la probabilité d’un revenu supérieur à 50\,000\$.
+\end{itemize}
+
+\subsection{Attributs catégoriels}
+
+\begin{itemize}
+    \item \textbf{COW (classe de travailleur)} : type d’emploi (privé, public, indépendant, etc.). Certaines catégories sont associées à des revenus plus élevés.
+
+    \item \textbf{MAR (état matrimonial)} : la majorité des individus est mariée ou jamais mariée. Le statut de marié est positivement corrélé au revenu.
+
+    \item \textbf{OCCP (occupation)} : variable à très forte cardinalité décrivant la profession. La distribution est fortement déséquilibrée, avec de nombreuses catégories rares.
+
+    \item \textbf{POBP (lieu de naissance)} : pays ou État de naissance. Cette variable présente une grande diversité et une corrélation indirecte avec le revenu.
+
+    \item \textbf{RELP (relation familiale)} : relation au sein du foyer. Les personnes de référence ou conjoints présentent en moyenne des revenus plus élevés.
+
+    \item \textbf{SEX} et \textbf{RAC1P (race)} : ces variables présentent des corrélations avec le revenu, reflétant des inégalités socio-économiques structurelles. Elles sont considérées comme des attributs sensibles.
+\end{itemize}
+
+\section{Préparation des données pour l’apprentissage automatique}
+
+L’objectif est de produire des données compatibles avec des modèles de la famille des arbres de décision (\textit{Random Forest}, \textit{AdaBoost}, \textit{XGBoost}).
+
+\subsection{Encodage des variables}
+
+Les variables catégorielles (\texttt{COW}, \texttt{MAR}, \texttt{OCCP}, \texttt{POBP}, \texttt{RELP}, \texttt{RAC1P}) sont transformées par encodage binaire (\textit{one-hot encoding}).  
+Ce choix permet de représenter chaque modalité sans introduire d’ordre artificiel.
+
+Les variables numériques (\texttt{AGEP}, \texttt{WKHP}) sont conservées sous forme continue.  
+La variable \texttt{SCHL}, bien qu’ordinale, est également conservée sous forme numérique afin de préserver son ordre sémantique.
+
+\subsection{Sélection et traitement des attributs}
+
+Les variables à forte cardinalité, notamment \texttt{OCCP} et \texttt{POBP}, augmentent la dimension des données mais sont conservées afin de ne pas perdre d’information pertinente.  
+La variable \texttt{PINCP} est utilisée uniquement pour la construction du label et n’est pas incluse parmi les variables explicatives.
+
+\subsection{Standardisation}
+
+Une normalisation des variables \texttt{AGEP} et \texttt{WKHP} est envisagée. Toutefois, pour les modèles à base d’arbres, cette étape n’est pas indispensable car ces modèles ne sont pas sensibles à l’échelle des variables.  
+La standardisation est donc réalisée à titre expérimental et pour assurer une compatibilité avec d’autres familles de modèles.
+
+\section{Partition du jeu de données}
+
+Le jeu de données est mélangé puis séparé en deux ensembles :
+\begin{itemize}
+    \item Ensemble d’entraînement : 75 \%
+    \item Ensemble de test : 25 \%
+\end{itemize}
+
+La partition est effectuée aléatoirement avec une graine fixée (\texttt{random\_state = 42}) afin de garantir la reproductibilité des résultats.
+
+\chapter{Expérimentation 1 : Comparaison de modèles par défaut}
+
+\section*{Partition des données}
+
+\begin{itemize}
+    \item Ensemble d'entraînement : \textbf{124\,736 observations} $\times$ \textbf{10 variables}
+    \item Ensemble de test : \textbf{41\,579 observations} $\times$ \textbf{10 variables}
+    \item Partition : 75\% entraînement / 25\% test (données mélangées)
+\end{itemize}
+
+\section*{Résultats -- Hyperparamètres par défaut}
+
+\paragraph{Évaluation sur l'ensemble d'entraînement}
+
+Les performances mesurées sur l’ensemble d’entraînement sont légèrement supérieures à celles observées sur l’ensemble de test, ce qui indique un sur-apprentissage limité pour les trois modèles.
+
+\begin{table}[H]
+\centering
+\caption{Performances sur l'ensemble d'entraînement}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Métrique} & \textbf{Random Forest} & \textbf{AdaBoost} & \textbf{XGBoost} \\
+\midrule
+Accuracy & $\approx$ 0.83 & $\approx$ 0.81 & $\approx$ 0.84 \\
+Temps de calcul (s) & 14.47 & 2.37 & 0.92 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Évaluation sur l'ensemble de test}
+
+\begin{table}[H]
+\centering
+\caption{Performances sur l'ensemble de test}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Métrique} & \textbf{Random Forest} & \textbf{AdaBoost} & \textbf{XGBoost} \\
+\midrule
+Accuracy & 0.8155 & 0.8034 & \textbf{0.8261} \\
+Temps de calcul (s) & 14.47 & 2.37 & \textbf{0.92} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section*{Matrices de confusion}
+
+Les matrices de confusion présentées ci-dessous permettent d’analyser la répartition des erreurs de classification pour chaque modèle.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/confusion_matrix_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/confusion_matrix_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/confusion_matrix_xgboost.png}
+\caption{Matrices de confusion sur l'ensemble de test (Random Forest, AdaBoost, XGBoost)}
+\end{figure}
+
+\section*{Comparaison globale des performances}
+
+La figure suivante synthétise les performances des trois modèles en termes d’accuracy sur l’ensemble de test.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{tests/accuracy_comparison.png}
+\caption{Comparaison des modèles selon l'accuracy sur l'ensemble de test}
+\end{figure}
+
+\section*{Analyse et commentaires}
+
+Les résultats montrent que le modèle \textbf{XGBoost} obtient la meilleure accuracy sur l’ensemble de test (82.61\%), tout en présentant le temps de calcul le plus faible.  
+Le modèle \textbf{Random Forest} offre des performances comparables, mais avec un coût computationnel plus élevé.  
+\textbf{AdaBoost} présente des performances légèrement inférieures, tout en restant compétitif grâce à un temps d’entraînement modéré.
+
+
+
+\chapter{Expérimentation 2 : Comparaison des modèles après optimisation}
+
+\subsection*{Jeu de données}
+Le jeu de données utilisé est \textbf{ACSIncome} (État de Californie, 2018).  
+La tâche consiste à prédire si le revenu annuel d’un individu est supérieur à 50\,000\$ à partir de variables socio-démographiques et professionnelles.
+
+\section*{Partition des données}
+\begin{itemize}
+    \item Ensemble d’entraînement : \textbf{124\,736 lignes} $\times$ \textbf{10 colonnes}
+    \item Ensemble de test : \textbf{41\,579 lignes} $\times$ \textbf{10 colonnes}
+    \item Partition : 75\% entraînement / 25\% test (données mélangées)
+\end{itemize}
+
+% =====================================================
+\section{Random Forest}
+
+\paragraph{Processus d’entraînement}
+Le modèle Random Forest est optimisé à l’aide d’une recherche exhaustive des hyperparamètres par \textbf{GridSearchCV}, combinée à une validation croisée.
+
+\paragraph{Hyperparamètres testés}
+\begin{itemize}
+    \item \texttt{n\_estimators} $\in \{100, 300\}$
+    \item \texttt{max\_depth} $\in \{\text{None}, 10, 20\}$
+\end{itemize}
+
+\paragraph{Validation croisée}
+\begin{itemize}
+    \item Nombre de plis : 3
+    \item Nombre total d’entraînements : $6 \times 3 = 18$
+\end{itemize}
+
+\paragraph{Meilleurs hyperparamètres}
+\begin{verbatim}
+n_estimators = 300
+max_depth = 20
+\end{verbatim}
+
+\paragraph{Performances}
+\begin{itemize}
+    \item Accuracy entraînement : 0.9581
+    \item Accuracy test : 0.8210
+    \item Temps de calcul total : 153.49 s
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{tests/exp2/confusion_matrix_randomforest.png}
+\caption{Matrice de confusion Random Forest (test)}
+\end{figure}
+
+\paragraph{Analyse}
+L’optimisation améliore légèrement les performances par rapport au modèle par défaut (0.8155 $\rightarrow$ 0.8210), mais au prix d’un coût computationnel élevé et d’un sur-apprentissage notable.
+
+% =====================================================
+\section{AdaBoost}
+
+\paragraph{Processus d’entraînement}
+Le modèle AdaBoost est optimisé par GridSearchCV afin d’ajuster le nombre d’estimateurs et le taux d’apprentissage.
+
+\paragraph{Hyperparamètres testés}
+\begin{itemize}
+    \item \texttt{n\_estimators} $\in \{50, 200\}$
+    \item \texttt{learning\_rate} $\in \{0.5, 1.0, 2.0\}$
+\end{itemize}
+
+\paragraph{Validation croisée}
+\begin{itemize}
+    \item Nombre de plis : 3
+    \item Nombre total d’entraînements : $6 \times 3 = 18$
+\end{itemize}
+
+\paragraph{Meilleurs hyperparamètres}
+\begin{verbatim}
+n_estimators = 200
+learning_rate = 1.0
+\end{verbatim}
+
+\paragraph{Performances}
+\begin{itemize}
+    \item Accuracy entraînement : 0.8100
+    \item Accuracy test : 0.8092
+    \item Temps de calcul total : 39.16 s
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{tests/exp2/confusion_matrix_adaboost.png}
+\caption{Matrice de confusion AdaBoost (test)}
+\end{figure}
+
+\paragraph{Analyse}
+Le tuning améliore légèrement les performances par rapport au modèle par défaut (0.8034 $\rightarrow$ 0.8092), tout en conservant un temps de calcul modéré.
+
+% =====================================================
+\section{XGBoost}
+
+\paragraph{Processus d’entraînement}
+Le modèle XGBoost est optimisé via GridSearchCV en ajustant la profondeur des arbres, le taux d’apprentissage et le nombre d’estimateurs.
+
+\paragraph{Hyperparamètres testés}
+\begin{itemize}
+    \item \texttt{n\_estimators} $\in \{100, 300\}$
+    \item \texttt{max\_depth} $\in \{3, 6\}$
+    \item \texttt{learning\_rate} $\in \{0.05, 0.1\}$
+\end{itemize}
+
+\paragraph{Validation croisée}
+\begin{itemize}
+    \item Nombre de plis : 3
+    \item Nombre total d’entraînements : $8 \times 3 = 24$
+\end{itemize}
+
+\paragraph{Meilleurs hyperparamètres}
+\begin{verbatim}
+n_estimators = 300
+max_depth = 6
+learning_rate = 0.1
+\end{verbatim}
+
+\paragraph{Performances}
+\begin{itemize}
+    \item Accuracy entraînement : 0.8440
+    \item Accuracy test : 0.8261
+    \item Temps de calcul total : 15.99 s
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{tests/exp2/confusion_matrix_xgboost.png}
+\caption{Matrice de confusion XGBoost (test)}
+\end{figure}
+
+\paragraph{Analyse}
+Les performances en test sont similaires à celles du modèle par défaut, indiquant que XGBoost était déjà bien paramétré initialement. Il demeure le modèle le plus performant et le plus stable.
+
+% =====================================================
+\section{Comparaison globale :}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{tests/exp2/accuracy_comparison_exp1_vs_exp2.png}
+\caption{Comparaison des accuracies sur l’ensemble de test entre les modèles par défaut (Expérimentation 1) et optimisés (Expérimentation 2)}
+\end{figure}
+
+\section*{Conclusion}
+La recherche d’hyperparamètres permet une amélioration modérée des performances pour Random Forest et AdaBoost, au prix d’un coût computationnel plus élevé. XGBoost conserve les meilleures performances globales et présente une grande robustesse, ce qui en fait le modèle le plus adapté à cette tâche de classification.
+
+
+
+\chapter{Expérimentation 3 : Comparaison des meilleurs modèles}
+
+\section*{Jeu de données}
+Le jeu de données utilisé est \textbf{ACSIncome} (État de Californie, année 2018).  
+L’objectif est de prédire si le revenu annuel d’un individu dépasse 50\,000\$ à partir de variables socio-démographiques et professionnelles.
+
+\section*{Partition des données}
+\begin{itemize}
+    \item Ensemble d’entraînement : \textbf{124\,736 lignes} $\times$ \textbf{10 colonnes}
+    \item Ensemble de test : \textbf{41\,579 lignes} $\times$ \textbf{10 colonnes}
+    \item Partition : 75\% entraînement / 25\% test (mélange aléatoire)
+\end{itemize}
+
+\section*{Objectif de l’expérimentation}
+Cette expérimentation vise à comparer les \textbf{meilleurs modèles obtenus à l’issue de l’Expérimentation 2} (Random Forest, AdaBoost et XGBoost), en évaluant leurs performances finales sur les ensembles d’entraînement et de test à l’aide de plusieurs métriques.
+
+% =====================================================
+\section{Résultats sur l’ensemble d’entraînement}
+
+\begin{table}[H]
+\centering
+\caption{Performances des meilleurs modèles sur l’ensemble d’entraînement}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Métrique} & \textbf{Random Forest} & \textbf{AdaBoost} & \textbf{XGBoost} \\
+\midrule
+Accuracy & 0.9581 & 0.8100 & 0.8440 \\
+Temps de calcul (s) & 113.50 & 28.76 & 12.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{tests/exp3/confusion_matrix_train_randomforest.png}
+
+\vspace{0.4cm}
+
+\includegraphics[width=0.6\textwidth]{tests/exp3/confusion_matrix_train_adaboost.png}
+
+\vspace{0.4cm}
+
+\includegraphics[width=0.6\textwidth]{tests/exp3/confusion_matrix_train_xgboost.png}
+\caption{Matrices de confusion sur l’ensemble d’entraînement (Random Forest, AdaBoost, XGBoost)}
+\end{figure}
+
+
+\paragraph{Analyse}
+Random Forest présente une accuracy d’entraînement très élevée, traduisant un sur-apprentissage marqué. AdaBoost et XGBoost montrent des performances plus modérées et mieux régularisées.
+
+% =====================================================
+\section{Résultats sur l’ensemble de test}
+
+\begin{table}[H]
+\centering
+\caption{Performances des meilleurs modèles sur l’ensemble de test}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Métrique} & \textbf{Random Forest} & \textbf{AdaBoost} & \textbf{XGBoost} \\
+\midrule
+Accuracy & 0.8210 & 0.8092 & \textbf{0.8261} \\
+Précision & 0.7847 & 0.7712 & \textbf{0.7877} \\
+Rappel & 0.7762 & 0.7598 & \textbf{0.7879} \\
+F1-score & 0.7804 & 0.7654 & \textbf{0.7878} \\
+Temps de calcul (s) & 113.50 & 28.76 & \textbf{12.04} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =====================================================
+\section{Comparaison globale des métriques}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{tests/exp3/accuracy_comparison_exp3.png}
+\includegraphics[width=0.48\textwidth]{tests/exp3/precision_comparison_exp3.png}
+\includegraphics[width=0.48\textwidth]{tests/exp3/recall_comparison_exp3.png}
+\includegraphics[width=0.48\textwidth]{tests/exp3/f1_comparison_exp3.png}
+\caption{Comparaison des métriques (accuracy, précision, rappel et F1-score) sur l’ensemble de test}
+\end{figure}
+
+% =====================================================
+\section*{Commentaires et analyse}
+
+Les résultats montrent que \textbf{XGBoost} offre le meilleur compromis global entre performance et coût computationnel. Il obtient les meilleures valeurs pour l’accuracy, la précision, le rappel et le F1-score sur l’ensemble de test, tout en étant le modèle le plus rapide à entraîner.  
+Random Forest présente un sur-apprentissage important, tandis qu’AdaBoost, bien que plus stable, reste moins performant. Ces observations confirment que XGBoost est le modèle final le plus adapté pour cette tâche de classification.
+
+\chapter{Expérimentation 4 : inférence sur un autre jeu de données (optionnel)}
+
+\section*{Objectif}
+L’objectif de cette expérimentation est d’évaluer la \textbf{capacité de généralisation} des meilleurs modèles (optimisés sur la Californie lors de l’Expérimentation 2) lorsqu’ils sont appliqués \textbf{sans ré-entraînement} sur des jeux de données provenant d’autres États.  
+Deux États sont considérés : \textbf{Colorado (CO)} et \textbf{Nebraska (NE)}.
+
+\section*{Méthodologie}
+Les modèles optimisés (\textit{Random Forest}, \textit{AdaBoost} et \textit{XGBoost}) sont appliqués directement aux nouveaux jeux de données.  
+On évalue les performances à l’aide des métriques suivantes :
+\begin{itemize}
+    \item \textbf{Accuracy} : proportion de prédictions correctes.
+    \item \textbf{Précision (Precision)} : proportion de vrais positifs parmi les positifs prédits.
+    \item \textbf{Rappel (Recall)} : proportion de vrais positifs détectés.
+    \item \textbf{F1-score} : moyenne harmonique précision/rappel.
+    \item \textbf{AUC ROC} : aire sous la courbe ROC, mesure de la capacité de séparation des classes.
+\end{itemize}
+
+En plus des matrices de confusion, on utilise :
+\begin{itemize}
+    \item \textbf{Courbes ROC} : TPR (rappel) en fonction du FPR (faux positifs) selon le seuil.
+    \item \textbf{Courbes Precision--Recall (PR)} : précision en fonction du rappel selon le seuil (utile si classes déséquilibrées).
+    \item \textbf{Courbes métriques vs seuil} : variation de accuracy/precision/recall/F1 en fonction du seuil de décision.
+\end{itemize}
+
+% ============================================================
+\section{Résultats sur le Colorado (CO)}
+
+\subsection*{Performances globales}
+\begin{table}[H]
+\centering
+\caption{Résultats en inférence sur l'État CO}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Modèle} & \textbf{Accuracy} & \textbf{Précision} & \textbf{Rappel} & \textbf{F1} & \textbf{AUC} \\
+\midrule
+Random Forest & 0.7805 & 0.6926 & 0.8455 & 0.7614 & 0.8734 \\
+AdaBoost      & 0.7766 & 0.6895 & 0.8384 & 0.7567 & 0.8666 \\
+XGBoost       & \textbf{0.7881} & \textbf{0.6973} & \textbf{0.8632} & \textbf{0.7715} & \textbf{0.8844} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{Matrices de confusion}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/confusion_matrix_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/confusion_matrix_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/confusion_matrix_xgboost.png}
+\caption{Matrices de confusion (CO) en inférence}
+\end{figure}
+
+\subsection*{Courbes ROC (AUC)}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/roc_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/roc_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/roc_xgboost.png}
+\caption{Courbes ROC (CO). Les AUC élevées indiquent une bonne séparation des classes.}
+\end{figure}
+
+\subsection*{Courbes Precision--Recall}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/pr_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/pr_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/pr_xgboost.png}
+\caption{Courbes Precision--Recall (CO). Elles montrent le compromis précision/rappel selon le seuil.}
+\end{figure}
+
+\subsection*{Courbes métriques vs seuil}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/threshold_metrics_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/threshold_metrics_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/CO/threshold_metrics_xgboost.png}
+\caption{Évolution des métriques (CO) en fonction du seuil de décision.}
+\end{figure}
+
+\paragraph{Analyse CO}
+Sur le Colorado, \textbf{XGBoost} obtient les meilleures performances globales (accuracy, F1 et AUC).  
+Les trois modèles présentent un \textbf{rappel élevé} ($\approx 0.84$--$0.86$), indiquant une bonne détection des individus ayant un revenu $>50k$.  
+Cependant, la précision reste modérée ($\approx 0.69$), ce qui montre l’existence d’un nombre non négligeable de \textbf{faux positifs}.  
+Les courbes ROC confirment une bonne capacité de séparation (AUC $>0.86$).  
+Les courbes métriques vs seuil permettent d’observer qu’une augmentation du seuil améliore généralement la précision au détriment du rappel.
+
+% ============================================================
+\section{Résultats sur le Nebraska (NE)}
+
+\subsection*{Performances globales}
+\begin{table}[H]
+\centering
+\caption{Résultats en inférence sur l'État NE}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Modèle} & \textbf{Accuracy} & \textbf{Précision} & \textbf{Rappel} & \textbf{F1} & \textbf{AUC} \\
+\midrule
+Random Forest & 0.7371 & 0.5509 & \textbf{0.8560} & 0.6704 & 0.8539 \\
+AdaBoost      & 0.7317 & 0.5464 & 0.8281 & 0.6584 & 0.8428 \\
+XGBoost       & \textbf{0.7446} & \textbf{0.5596} & 0.8557 & \textbf{0.6767} & \textbf{0.8641} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{Matrices de confusion}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/confusion_matrix_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/confusion_matrix_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/confusion_matrix_xgboost.png}
+\caption{Matrices de confusion (NE) en inférence}
+\end{figure}
+
+\subsection*{Courbes ROC (AUC)}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/roc_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/roc_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/roc_xgboost.png}
+\caption{Courbes ROC (NE). Les AUC indiquent une bonne capacité de classement malgré une baisse d'accuracy.}
+\end{figure}
+
+\subsection*{Courbes Precision--Recall}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/pr_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/pr_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/pr_xgboost.png}
+\caption{Courbes Precision--Recall (NE). Elles montrent une précision plus faible pour un rappel élevé.}
+\end{figure}
+
+\subsection*{Courbes métriques vs seuil}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/threshold_metrics_randomforest.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/threshold_metrics_adaboost.png}
+\includegraphics[width=0.32\textwidth]{tests/exp4/NE/threshold_metrics_xgboost.png}
+\caption{Évolution des métriques (NE) en fonction du seuil de décision.}
+\end{figure}
+
+\paragraph{Analyse NE}
+Sur le Nebraska, les performances chutent davantage (accuracy $\approx 0.73$--$0.74$).  
+La \textbf{précision} est nettement plus faible ($\approx 0.55$) alors que le \textbf{rappel} reste très élevé ($\approx 0.83$--$0.86$).  
+Cela signifie que les modèles détectent bien les vrais positifs, mais produisent davantage de \textbf{faux positifs}.  
+Ce comportement est cohérent avec un changement de distribution entre la Californie et le Nebraska (différences économiques, structure des métiers, proportion de revenus élevés, etc.).  
+Malgré cela, les AUC restent élevées ($>0.84$), indiquant que le classement par score est toujours bon : un ajustement du seuil pourrait améliorer la précision.
+
+% ============================================================
+\section*{Commentaires et conclusion}
+
+Les résultats confirment que l’application directe d’un modèle optimisé sur un État (Californie) vers d’autres États induit une baisse de performance, ce qui est attendu en présence de \textbf{décalage de distribution}.  
+\textbf{XGBoost} se montre le plus robuste et obtient les meilleures performances globales sur CO et NE (accuracy, F1 et AUC).  
+Les courbes ROC et PR montrent que la capacité de séparation reste bonne, mais que la calibration du seuil peut fortement influencer le compromis précision/rappel, en particulier sur le Nebraska où la précision est faible.
+
+\chapter{Expérimentation 5 : impact de la taille du jeu de données}
+
+\section*{Objectif}
+Cette expérimentation vise à analyser l’impact de la \textbf{taille du jeu d’entraînement} sur la qualité des prédictions.
+On utilise uniquement les \textbf{meilleurs hyperparamètres} obtenus lors de l’Expérimentation 2 (GridSearchCV).
+L’évaluation est réalisée sur un \textbf{ensemble de test fixe} (identique pour toutes les tailles), afin d’observer comment la performance évolue lorsque l’on augmente progressivement la quantité de données disponibles pour l’apprentissage.
+
+\section*{Protocole expérimental}
+Soit $D_{train}$ l’ensemble d’entraînement complet. On construit des sous-ensembles \textbf{stratifiés} (afin de préserver la proportion des classes) de taille croissante (par exemple 5\%, 10\%, 20\%, 40\%, 60\%, 80\%, 100\% de $D_{train}$).
+Pour chaque taille :
+\begin{itemize}
+    \item On entraîne chaque modèle (\textit{RandomForest}, \textit{AdaBoost}, \textit{XGBoost}) avec ses hyperparamètres optimaux.
+    \item On évalue sur le même jeu de test fixe.
+    \item On mesure : \textbf{accuracy}, \textbf{precision}, \textbf{recall}, \textbf{F1-score} et le \textbf{temps d’entraînement}.
+\end{itemize}
+
+\medskip
+\noindent\textbf{Remarque (barres d’erreur).} Les traits verticaux présents sur les courbes correspondent aux \textbf{barres d’erreur} : elles représentent l’\textbf{écart-type} des scores obtenus sur plusieurs répétitions (plusieurs sous-échantillonnages).
+Des barres d’erreur grandes indiquent une performance plus \textbf{instable} (variance élevée), ce qui arrive souvent lorsque la taille d’entraînement est faible.
+
+\section*{Courbes de performance en fonction de la taille}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{tests/exp5/plots/accuracy_vs_train_size.png}
+\caption{Accuracy en fonction de la taille du jeu d'entraînement (test fixe).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{tests/exp5/plots/f1_vs_train_size.png}
+\caption{F1-score en fonction de la taille du jeu d'entraînement (test fixe).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{tests/exp5/plots/precision_vs_train_size.png}
+\caption{Précision en fonction de la taille du jeu d'entraînement (test fixe).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{tests/exp5/plots/recall_vs_train_size.png}
+\caption{Rappel en fonction de la taille du jeu d'entraînement (test fixe).}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{tests/exp5/plots/time_vs_train_size.png}
+\caption{Temps d'entraînement en fonction de la taille du jeu d'entraînement.}
+\end{figure}
+
+\section*{Comparaison finale sur la taille maximale}
+Sur la taille maximale ($n_{train}\approx 124736$), les performances finales observées sont :
+
+\begin{itemize}
+    \item \textbf{Accuracy :} XGBoost ($0.8261$) $>$ RandomForest ($0.8210$) $>$ AdaBoost ($0.8092$)
+    \item \textbf{Précision :} XGBoost ($0.7877$) $>$ RandomForest ($0.7847$) $>$ AdaBoost ($0.7712$)
+    \item \textbf{Rappel :} XGBoost ($0.7879$) $>$ RandomForest ($0.7762$) $>$ AdaBoost ($0.7598$)
+    \item \textbf{F1-score :} XGBoost ($0.7878$) $>$ RandomForest ($0.7804$) $>$ AdaBoost ($0.7654$)
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{tests/exp5/final_precision_comparison.png}
+\caption{Comparaison finale de la précision sur la taille maximale ($n_{train}\approx 124736$).}
+\end{figure}
+
+\section*{Résultats / Commentaires / Analyses}
+
+\paragraph{Effet de la taille sur la qualité de prédiction}
+Les courbes montrent globalement que l’augmentation du nombre d’exemples d’entraînement améliore les performances sur le jeu de test, en particulier pour \textbf{l’accuracy} et le \textbf{F1-score}.
+Cela est cohérent : avec peu de données, les modèles sont plus sensibles au sous-échantillonnage (variance plus forte), ce qui se traduit par des barres d’erreur plus grandes et des performances moins stables. Lorsque la taille augmente, les performances se stabilisent.
+
+\paragraph{Compromis précision / rappel}
+L’étude conjointe des courbes \textbf{precision} et \textbf{recall} permet d’interpréter les variations du F1-score.
+Par exemple, il est possible qu’un modèle améliore légèrement sa précision avec plus de données tout en maintenant (ou en modifiant) son rappel : le F1-score reflète alors ce compromis.
+Dans nos résultats, \textbf{XGBoost} conserve la meilleure combinaison précision/rappel sur la majorité des tailles, ce qui explique son meilleur F1-score.
+
+\paragraph{Phénomène de saturation (rendements décroissants)}
+On observe un \textbf{ralentissement de la progression} lorsque l’on se rapproche de la taille maximale : les courbes tendent vers un plateau.
+Cela indique que, passé un certain volume, l’ajout de données apporte un gain marginal plus faible : la performance est alors davantage limitée par (i) la capacité du modèle et (ii) l’information contenue dans les attributs disponibles.
+
+\paragraph{Comparaison des modèles}
+Sur l’ensemble des tailles, \textbf{XGBoost} obtient systématiquement les meilleures performances en test (accuracy, précision, rappel et F1).
+\textbf{RandomForest} est proche en performance, mais généralement en dessous de XGBoost.
+\textbf{AdaBoost} progresse moins avec l’augmentation de taille, suggérant une capacité plus limitée dans ce contexte (ou une sensibilité différente aux attributs).
+
+\paragraph{Coût computationnel}
+Le temps d’entraînement augmente naturellement avec la taille du jeu d’entraînement.
+Sur la taille maximale ($n_{train}\approx 124736$), on observe :
+\begin{itemize}
+    \item RandomForest : $\approx 34.10$ s (coût le plus élevé)
+    \item AdaBoost : $\approx 8.23$ s
+    \item XGBoost : $\approx 0.70$ s (le plus rapide ici)
+\end{itemize}
+Ainsi, \textbf{XGBoost} présente le meilleur compromis performance/temps dans ce cadre expérimental.
+
+\section*{Conclusion}
+L’augmentation de la taille du jeu d’entraînement améliore la qualité des prédictions, avec un effet de \textbf{saturation} lorsque l’on approche de la taille maximale.
+Dans ce cadre, \textbf{XGBoost optimisé} est le meilleur choix : il obtient les meilleures performances et reste le plus efficace en temps de calcul.
+
+
+
+\chapter{3 \; Explicabilité des prédictions}
+\section{3.1 \; Classement des attributs dans la prédiction (Permutation Feature Importance)}
+
+\subsection*{Modèles étudiés et protocole}
+Dans cette partie, nous analysons globalement les prédictions des trois modèles optimisés (Expérimentation 2) :
+\textbf{Random Forest}, \textbf{AdaBoost} et \textbf{XGBoost}.
+Les importances sont estimées sur l'ensemble de test à l'aide d'une méthode de \textbf{Permutation Feature Importance}
+(importance par permutation), en utilisant le \textbf{F1-score} comme métrique (plus robuste que l'accuracy en cas de déséquilibre de classes).
+Pour améliorer la lisibilité (présence de variables encodées), les importances ont été \textbf{agrégées par attribut d'origine}
+(\texttt{perm\_importance\_grouped\_top15}).
+
+\subsection*{Principe de la méthode}
+L’idée est de mesurer la contribution d’un attribut $X_j$ au pouvoir prédictif du modèle :
+\begin{enumerate}
+    \item On calcule un score de référence $S$ du modèle sur un ensemble d’évaluation (ici, le F1-score).
+    \item Pour un attribut $X_j$, on \textbf{permute aléatoirement} ses valeurs dans les données d’évaluation,
+    en conservant toutes les autres colonnes inchangées. Cette permutation détruit le lien statistique entre $X_j$ et la cible.
+    \item On recalcule le score $S_j^{perm}$. La \textbf{baisse} $\Delta_j = S - S_j^{perm}$ quantifie
+    l’importance de $X_j$ : si $\Delta_j$ est grand, le modèle dépend fortement de cet attribut.
+    \item L’opération est répétée plusieurs fois (répétitions), et l’on reporte la moyenne et l’écart-type de $\Delta_j$.
+\end{enumerate}
+Cette méthode est applicable à tout classifieur et fournit une explication \textbf{globale}
+des variables les plus influentes.
+
+% ============================================================
+\section{Résultats : importances groupées (Top attributs)}
+
+\subsection*{AdaBoost (Permutation importance groupée)}
+\begin{table}[H]
+\centering
+\caption{Top attributs (AdaBoost) - moyenne $\pm$ écart-type (baisse du F1)}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Attribut} & \textbf{Importance (moy.)} & \textbf{Std} \\
+\midrule
+WKHP & 0.0906 & 0.0025 \\
+SCHL & 0.0638 & 0.0027 \\
+OCCP & 0.0636 & 0.0015 \\
+AGEP & 0.0403 & 0.0028 \\
+RELP & 0.0305 & 0.0036 \\
+SEX  & 0.0108 & 0.0013 \\
+POBP & 0.0076 & 0.0015 \\
+RAC1P& 0.0022 & 0.0008 \\
+COW  & 0.0020 & 0.0012 \\
+MAR  & 0.0013 & 0.0007 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{tests/exp6/adaboost/perm_importance_grouped_top15.png}
+\caption{Permutation feature importance groupée (AdaBoost) -- Top attributs}
+\end{figure}
+
+\paragraph{Interprétation (AdaBoost).}
+Les variables les plus déterminantes sont \textbf{WKHP} (heures travaillées), \textbf{SCHL} (niveau d’éducation),
+et \textbf{OCCP} (occupation). Cela indique que le modèle associe fortement un revenu élevé à un volume de travail
+important et à des catégories d’emplois / niveaux d’études plus qualifiés.
+Les contributions de \textbf{SEX} et \textbf{POBP} restent non nulles mais nettement plus faibles, et \textbf{RAC1P}, \textbf{MAR}, \textbf{COW}
+ont un impact très limité (dans ce cadre et avec ce modèle).
+
+% ============================================================
+\subsection*{Random Forest (Permutation importance groupée)}
+\begin{table}[H]
+\centering
+\caption{Top attributs (Random Forest) - moyenne $\pm$ écart-type (baisse du F1)}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Attribut} & \textbf{Importance (moy.)} & \textbf{Std} \\
+\midrule
+WKHP & 0.1045 & 0.0043 \\
+OCCP & 0.0876 & 0.0025 \\
+SCHL & 0.0749 & 0.0026 \\
+AGEP & 0.0622 & 0.0024 \\
+RELP & 0.0338 & 0.0036 \\
+SEX  & 0.0137 & 0.0014 \\
+POBP & 0.0103 & 0.0015 \\
+COW  & 0.0099 & 0.0011 \\
+MAR  & 0.0081 & 0.0012 \\
+RAC1P& 0.0019 & 0.0015 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{tests/exp6/randomforest/perm_importance_grouped_top15.png}
+\caption{Permutation feature importance groupée (Random Forest) -- Top attributs}
+\end{figure}
+
+\paragraph{Interprétation (Random Forest).}
+Le classement est proche de celui d’AdaBoost mais avec un effet plus marqué de \textbf{WKHP}, \textbf{OCCP}, \textbf{SCHL} et \textbf{AGEP},
+ce qui est cohérent avec la capacité des forêts aléatoires à exploiter des interactions non linéaires.
+Les attributs \textbf{COW} et \textbf{MAR} apparaissent ici un peu plus importants que dans AdaBoost, ce qui peut
+s’expliquer par des règles de décision exploitant des sous-populations spécifiques (ex. types d’emploi associés aux revenus).
+
+% ============================================================
+\subsection*{XGBoost (Permutation importance groupée)}
+\begin{table}[H]
+\centering
+\caption{Top attributs (XGBoost) - moyenne $\pm$ écart-type (baisse du F1)}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Attribut} & \textbf{Importance (moy.)} & \textbf{Std} \\
+\midrule
+OCCP & 0.1085 & 0.0005 \\
+WKHP & 0.0903 & 0.0051 \\
+AGEP & 0.0575 & 0.0033 \\
+SCHL & 0.0554 & 0.0021 \\
+RELP & 0.0281 & 0.0020 \\
+COW  & 0.0103 & 0.0011 \\
+SEX  & 0.0062 & 0.0017 \\
+POBP & 0.0057 & 0.0006 \\
+RAC1P& 0.0026 & 0.0008 \\
+MAR  & 0.0018 & 0.0016 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{tests/exp6/xgboost/perm_importance_grouped_top15.png}
+\caption{Permutation feature importance groupée (XGBoost) -- Top attributs}
+\end{figure}
+
+\paragraph{Interprétation (XGBoost).}
+\textbf{OCCP} (occupation) est ici l’attribut le plus important, ce qui indique que XGBoost exploite très fortement
+l’information portée par la profession (variables catégorielles potentiellement riches après encodage).
+\textbf{WKHP}, \textbf{AGEP} et \textbf{SCHL} suivent de près, confirmant que la décision « revenu $> 50k$ » dépend
+principalement de variables liées au \textbf{capital humain} (éducation, expérience/âge), au \textbf{temps de travail}
+et au \textbf{secteur/profession}. L’écart-type très faible pour \textbf{OCCP} suggère une importance stable selon les permutations.
+
+% ============================================================
+\section*{Synthèse et compréhension des prédictions}
+\paragraph{Résultats clés.}
+Les trois modèles s’accordent sur un noyau dur de variables déterminantes :
+\begin{itemize}
+    \item \textbf{WKHP} : nombre d’heures travaillées par semaine.
+    \item \textbf{SCHL} : niveau d’éducation.
+    \item \textbf{OCCP} : occupation / profession.
+    \item \textbf{AGEP} : âge (proxy d’expérience).
+\end{itemize}
+Ces résultats sont cohérents avec l’intuition socio-économique : un revenu élevé est corrélé à des emplois qualifiés,
+un niveau d’étude plus élevé et un volume de travail plus important.
+
+\paragraph{Que nous apprend cette analyse ?}
+La permutation importance montre \textbf{quels attributs pilotent réellement} la décision des modèles.
+Elle permet :
+\begin{itemize}
+    \item d’identifier les variables explicatives dominantes,
+    \item de vérifier la cohérence avec des connaissances métier,
+    \item de repérer des attributs sensibles (ex. \textbf{SEX}, \textbf{RAC1P}) : ici leur importance est relativement faible
+    comparée aux variables socio-professionnelles, mais non nulle.
+\end{itemize}
+
+\paragraph{Inférence « à la main » : possible ?}
+Une inférence exacte est difficile car les modèles utilisés sont des ensembles d’arbres (règles multiples et interactions).
+En revanche, on peut produire une \textbf{approximation qualitative} :
+\begin{itemize}
+    \item Un individu avec \textbf{WKHP} élevé, un \textbf{SCHL} élevé (diplôme supérieur),
+    et une \textbf{OCCP} associée à des professions qualifiées aura une probabilité plus grande d’être classé \textit{revenu $>50k$}.
+    \item À l’inverse, un \textbf{WKHP} faible combiné à une occupation moins qualifiée et un niveau d’éducation plus bas
+    rend la classe \textit{$\le 50k$} plus probable.
+\end{itemize}
+Ainsi, la permutation importance fournit une base exploitable pour comprendre globalement les décisions et raisonner
+sur des cas concrets, même si le calcul exact de la prédiction reste non trivial.
+
+
+\chapter{Explicabilité : avec LIME et SHAP}
+
+Dans ce chapitre, nous analysons le modèle (XGBoost optimisé) à l’aide d’outils d’explicabilité
+\textbf{locales} (explication d’un individu) et \textbf{globales} (tendances générales sur le jeu de test).
+Les figures proviennent des sorties enregistrées dans \texttt{tests/exp7/}.
+
+% (Pré-requis LaTeX recommandés dans le préambule)
+% \usepackage{graphicx}
+% \usepackage{float}
+% \usepackage{subcaption}
+
+\section{Méthode LIME}
+
+\subsection*{Principe}
+LIME (\textit{Local Interpretable Model-agnostic Explanations}) explique une prédiction en construisant une approximation
+\textbf{locale} du modèle complexe autour d’un exemple $x$.
+L’idée est de :
+(i) générer des points proches de $x$ (perturbations), (ii) obtenir les prédictions du modèle,
+(iii) ajuster un modèle interprétable (souvent linéaire) sur ces points, avec un poids de proximité plus fort près de $x$.
+
+\subsection*{Comment lire un graphique LIME}
+Dans les graphiques LIME pour la classe \textbf{\texttt{>50K}} :
+\begin{itemize}
+    \item les \textbf{barres vertes} poussent la prédiction vers \textbf{\texttt{>50K}};
+    \item les \textbf{barres rouges} poussent la prédiction vers \textbf{\texttt{$\leq$50K}};
+    \item chaque ligne est une règle (ex. \texttt{WKHP > 40}) correspondant à une \textbf{discrétisation} locale
+    (LIME transforme souvent les variables numériques en intervalles).
+    \item la longueur de la barre est l’\textbf{importance locale} (contribution) dans l’approximation linéaire.
+\end{itemize}
+
+\subsection*{Exemples choisis}
+Nous illustrons trois explications locales LIME (trois individus du jeu de test).
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/lime/lime_explanation_0_idx163305.png}
+\caption{Exemple idx163305}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/lime/lime_explanation_1_idx134592.png}
+\caption{Exemple idx134592}
+\end{subfigure}
+
+\vspace{0.35cm}
+\begin{subfigure}[b]{0.65\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/lime/lime_explanation_5_idx35822.png}
+\caption{Exemple idx35822}
+\end{subfigure}
+\caption{Explications locales LIME pour la classe \texttt{>50K}.}
+\label{fig:lime_examples}
+\end{figure}
+
+\subsection*{Résultats et commentaires}
+Sur la Figure~\ref{fig:lime_examples}, on observe que les attributs dominants localement sont souvent :
+\textbf{WKHP} (heures travaillées), \textbf{AGEP} (âge), \textbf{SCHL} (niveau d’étude),
+et \textbf{OCCP} (occupation).
+\begin{itemize}
+    \item Pour l’exemple \textbf{idx163305}, \texttt{WKHP > 40} et \texttt{AGEP > 55} contribuent fortement \textbf{positivement}
+    vers \texttt{>50K} (barres vertes). Certaines modalités de \texttt{RELP} ou \texttt{OCCP} tirent au contraire la décision
+    vers \texttt{$\leq$50K} (barres rouges).
+    \item Pour l’exemple \textbf{idx134592}, le niveau d’éducation (\texttt{SCHL > 21}) et l’âge poussent vers \texttt{>50K},
+    tandis que certaines modalités (ex. \texttt{RAC1P} ou \texttt{COW}) peuvent compenser négativement.
+    \item Pour \textbf{idx35822}, l’effet de \texttt{SEX} apparaît négatif localement, alors que \texttt{OCCP} et \texttt{RELP}
+    poussent positivement : cela illustre qu’une même variable peut avoir un \textbf{impact local} non négligeable,
+    mais cet impact est \textbf{spécifique à l’individu} et à son voisinage local.
+\end{itemize}
+
+\textbf{Limites (important).}
+LIME dépend du voisinage généré (perturbations) et de la discrétisation : deux exécutions (ou un réglage différent)
+peuvent produire des poids légèrement différents. Les contributions sont \textbf{locales} et ne se généralisent pas directement.
+
+
+\section{Méthode SHAP}
+
+\subsection*{Principe}
+SHAP (\textit{SHapley Additive exPlanations}) attribue à chaque attribut une contribution inspirée des valeurs de Shapley.
+SHAP fournit des explications additives :
+\[
+f(x) \approx E[f(X)] + \sum_j \phi_j
+\]
+où $E[f(X)]$ est une valeur de base (moyenne du modèle) et $\phi_j$ la contribution de l’attribut $j$.
+
+\subsection*{Comment lire un Waterfall plot SHAP}
+Dans un \textbf{waterfall plot} :
+\begin{itemize}
+    \item on part de la valeur de base $E[f(X)]$ (baseline),
+    \item chaque barre ajoute (ou retranche) une contribution SHAP,
+    \item les contributions \textbf{positives} poussent la prédiction vers la classe \texttt{>50K},
+    \item les contributions \textbf{négatives} la poussent vers \texttt{$\leq$50K}.
+\end{itemize}
+\textbf{Remarque :} pour XGBoost, SHAP affiche souvent $f(x)$ sur l’échelle interne du modèle (souvent proche des \textit{log-odds}).
+Le signe et la taille restent interprétables : positif $\Rightarrow$ augmente la probabilité de \texttt{>50K}, négatif $\Rightarrow$ la diminue.
+
+\subsection*{Exemples choisis (Waterfall)}
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/shap/waterfall_2_idx107716.png}
+\caption{Waterfall idx107716}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/shap/waterfall_3_idx164515.png}
+\caption{Waterfall idx164515}
+\end{subfigure}
+\caption{Explications locales SHAP (waterfall).}
+\label{fig:shap_waterfalls}
+\end{figure}
+
+\subsection*{Résultats et commentaires}
+La Figure~\ref{fig:shap_waterfalls} met en évidence des contributions fortes de :
+\textbf{OCCP}, \textbf{SCHL}, \textbf{WKHP}, \textbf{AGEP} et parfois \textbf{RELP} ou \textbf{SEX}.
+On observe des cas où :
+\begin{itemize}
+    \item certaines modalités de \textbf{OCCP} tirent fortement la prédiction vers \texttt{$\leq$50K} (grosses contributions négatives),
+    \item un niveau d’étude élevé (\textbf{SCHL}) et un nombre d’heures élevé (\textbf{WKHP}) compensent partiellement (contributions positives),
+    \item l’addition de plusieurs petites contributions peut inverser la décision ou la renforcer.
+\end{itemize}
+
+\section{Comparaison LIME et SHAP}
+\subsection*{Points communs}
+Sur nos exemples, LIME et SHAP identifient des variables récurrentes (\textbf{WKHP}, \textbf{SCHL}, \textbf{AGEP}, \textbf{OCCP}, \textbf{RELP})
+comme étant déterminantes, ce qui renforce la cohérence de l’explication.
+
+\subsection*{Différences}
+\begin{itemize}
+    \item \textbf{LIME} : explication basée sur une approximation linéaire locale. Très lisible (barres vert/rouge),
+    mais sensible au voisinage perturbé et à la discrétisation.
+    \item \textbf{SHAP} : explication additive plus “théorique”, souvent plus stable et comparable entre individus.
+    Permet aussi une analyse globale (summary plot).
+\end{itemize}
+
+\section{Analyse summary-plot de SHAP}
+
+\subsection*{Comment lire un summary plot (beeswarm)}
+Dans un \textbf{summary plot} SHAP :
+\begin{itemize}
+    \item l’axe $x$ = valeur SHAP (impact sur la sortie du modèle) :
+    \textbf{à droite} $\Rightarrow$ augmente la probabilité de \texttt{>50K},
+    \textbf{à gauche} $\Rightarrow$ la diminue.
+    \item chaque point = un individu du jeu de test.
+    \item la couleur = valeur de la feature (bleu = faible, rouge = élevée).
+    \item les features sont triées (haut $\Rightarrow$ plus important) selon la moyenne de $|\phi_j|$.
+\end{itemize}
+\textbf{Attention :} si une variable est un \textbf{code catégoriel} (ex. \texttt{OCCP}), la notion “valeur élevée/faible”
+n’a pas forcément un sens ordinal ; la couleur indique seulement un code numérique plus grand/petit.
+
+\subsection*{Résultats globaux}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{tests/exp7/shap/summary_plot_top15.png}
+\caption{SHAP summary plot global (top features).}
+\label{fig:shap_summary_global}
+\end{figure}
+
+Sur la Figure~\ref{fig:shap_summary_global}, les attributs les plus influents sont typiquement
+\textbf{OCCP}, \textbf{WKHP}, \textbf{AGEP}, \textbf{SCHL}, puis \textbf{RELP}.
+On observe notamment :
+\begin{itemize}
+    \item \textbf{WKHP} : les valeurs élevées (points rouges) ont tendance à être associées à des SHAP positifs,
+    ce qui est cohérent avec l’idée qu’un temps de travail important augmente la probabilité de revenus élevés.
+    \item \textbf{AGEP} et \textbf{SCHL} : des valeurs plus élevées génèrent fréquemment des contributions positives,
+    reflétant l’effet de l’expérience et du niveau d’études.
+    \item \textbf{OCCP} : forte dispersion des contributions, ce qui est attendu car l’occupation discrimine fortement les revenus,
+    mais l’interprétation “croissante” est limitée car \texttt{OCCP} est un code catégoriel.
+\end{itemize}
+
+\subsection*{Approfondissement : summary plot par sous-groupes TP/TN/FP/FN}
+\begin{figure}[H]
+\centering
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/shap/groups/summary_TP_top15.png}
+\caption{True Positives (TP)}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/shap/groups/summary_TN_top15.png}
+\caption{True Negatives (TN)}
+\end{subfigure}
+
+\vspace{0.25cm}
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/shap/groups/summary_FP_top15.png}
+\caption{False Positives (FP)}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{tests/exp7/shap/groups/summary_FN_top15.png}
+\caption{False Negatives (FN)}
+\end{subfigure}
+\caption{SHAP summary plots par sous-groupe (TP/TN/FP/FN).}
+\label{fig:shap_groups}
+\end{figure}
+
+La Figure~\ref{fig:shap_groups} aide à comprendre \textbf{où le modèle se trompe} :
+\begin{itemize}
+    \item Dans les \textbf{TP}, on voit souvent des contributions positives cohérentes (heures travaillées élevées, niveau d’études, âge),
+    ce qui renforce correctement la classe \texttt{>50K}.
+    \item Dans les \textbf{TN}, les contributions sont majoritairement négatives : certains codes d’occupation et faibles valeurs de \texttt{WKHP}
+    tirent le modèle vers \texttt{$\leq$50K}.
+    \item Dans les \textbf{FP}, certains individus reçoivent des contributions positives fortes (ex. \texttt{WKHP} ou \texttt{SCHL})
+    mais la vérité terrain est \texttt{$\leq$50K}. Cela suggère que le modèle peut \textbf{sur-interpréter} certains signaux comme
+    “revenu élevé” alors que d’autres facteurs non observés (ou mal encodés, notamment via \texttt{OCCP}) devraient contredire.
+    \item Dans les \textbf{FN}, l’inverse : malgré des signaux positifs, une ou plusieurs variables (souvent \texttt{OCCP}/\texttt{RELP})
+    tirent trop la prédiction vers \texttt{$\leq$50K}. On peut donc identifier des attributs susceptibles de \textbf{tromper le modèle}
+    lorsqu’ils prennent certaines modalités.
+\end{itemize}
+
+\textbf{Conclusion.}
+LIME et SHAP confirment des déterminants majeurs (WKHP, SCHL, AGEP, OCCP) et fournissent une lecture complémentaire :
+LIME est très intuitif pour expliquer \textit{un} individu, tandis que SHAP permet une vision locale \textbf{et} globale,
+et met en évidence les patterns d’erreurs via TP/TN/FP/FN.
+
+
+
+\end{document}

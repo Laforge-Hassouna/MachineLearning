@@ -1,0 +1,5 @@
+group,idx,feature,base_pred,base_proba,can_flip,new_value,new_proba,delta_abs,plot
+FN,35830,COW,0,0.18813712894916534,True,7.0,0.5255484580993652,6.0,tests/exp8/whatif_idx35830_COW.png
+TP,58567,SCHL,1,0.8540486693382263,True,13.0,0.45997482538223267,8.0,tests/exp8/whatif_idx58567_SCHL.png
+TN,98530,OCCP,0,0.07485141605138779,True,3255.0,0.5193589329719543,245.0,tests/exp8/whatif_idx98530_OCCP.png
+FP,150026,SCHL,1,0.7303311228752136,True,13.0,0.45084962248802185,5.0,tests/exp8/whatif_idx150026_SCHL.png
