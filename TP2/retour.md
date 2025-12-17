@@ -1,4 +1,4 @@
-# 📘 Expérimentation 2 — Optimisation des hyperparamètres
+#  Expérimentation 2 — Optimisation des hyperparamètres
 
 Dans cette expérience, nous utilisons **le même jeu de données** pour optimiser les trois modèles  
 (**Random Forest**, **AdaBoost**, **XGBoost**) via **GridSearchCV**.
@@ -18,7 +18,7 @@ Train = Total – Test = **8 316 échantillons**
 
 ---
 
-# 📊 Table 4 — Taille du jeu de données (Expérimentation 2)
+# Table 4 — Taille du jeu de données (Expérimentation 2)
 
 | Jeu | Taille |
 |-----|--------|
@@ -27,9 +27,9 @@ Train = Total – Test = **8 316 échantillons**
 
 ---
 
-# ⚙️ 1. Hyperparamètres explorés + justification
+#  1. Hyperparamètres explorés + justification
 
-## 🌲 Random Forest
+##  Random Forest
 Hyperparamètres explorés :
 ```python
 {
@@ -43,7 +43,7 @@ n_estimators : augmenter le nombre d’arbres améliore la stabilité mais augme
 
 max_depth : permet de contrôler l’overfitting ; None = croissance libre de l'arbre.
 
-## ⚡ AdaBoost
+## AdaBoost
 
 Hyperparamètres explorés :
 
@@ -60,7 +60,7 @@ n_estimators : plus d’itérations → meilleur ajustement mais plus lent.
 
 learning_rate : contrôle l’importance de chaque modèle faible (trade-off stabilité / précision).
 
-## 🚀 XGBoost
+## XGBoost
 
 Hyperparamètres explorés :
 
@@ -80,43 +80,43 @@ max_depth : profondeur des arbres → contrôle du sur-apprentissage.
 
 learning_rate : plus la valeur est faible, plus le modèle apprend “lentement” mais finement.
 
-# 📐 2. Nombre de plis utilisés
+#  2. Nombre de plis utilisés
 
 → Dans le code :
 
 cv = 3
 
-# 🧮 3. Nombre total d’entraînements effectués
+#  3. Nombre total d’entraînements effectués
 
 Modèle	Combinaisons	CV (3)	Total entraînements
 RandomForest	2 × 3 = 6	×3	18
 AdaBoost	2 × 3 = 6	×3	18
 XGBoost	2 × 3 × 3 = 18	×3	54
 
-# 📑 4. Tableau de résultats (Expérimentation 2)
-## 🌲 Random Forest
+#  4. Tableau de résultats (Expérimentation 2)
+##  Random Forest
 Random Forest	Train Accuracy	CPU time	Test Accuracy	Hyperparamètres
 Défaut	—	10.20 s	0.8173	n_estimators=100, max_depth=None
 Optimisé	—	71.18 s	0.8205	n_estimators=300, max_depth=20
 
-➡️ L'amélioration reste légère mais réelle.
+ L'amélioration reste légère mais réelle.
 
-## ⚡ AdaBoost
+## AdaBoost
 AdaBoost	Train Accuracy	CPU time	Test Accuracy	Hyperparamètres
 Défaut	—	1.71 s	0.8032	n_estimators=50, learning_rate=1.0
 Optimisé	—	17.66 s	0.8092	n_estimators=200, learning_rate=1.0
 
-➡️ Le gain est modéré. L’augmentation du nombre d’estimateurs améliore légèrement les performances.
+ Le gain est modéré. L’augmentation du nombre d’estimateurs améliore légèrement les performances.
 
-## 🚀 XGBoost
+## XGBoost
 XGBoost	Train Accuracy	CPU time	Test Accuracy	Hyperparamètres
 Défaut	—	0.20 s	0.8256	n_estimators=100, max_depth=6, learning_rate=0.1
 Optimisé	—	11.60 s	0.8264	n_estimators=300, max_depth=6, learning_rate=0.1
 
-➡️ Très légère amélioration ; XGBoost était déjà performant par défaut.
+Très légère amélioration ; XGBoost était déjà performant par défaut.
 
-# 📝 5. Analyse par méthode
-## 🌲 Random Forest
+# 5. Analyse par méthode
+## Random Forest
 
 L’augmentation du nombre d’arbres et la limitation de la profondeur permettent un modèle légèrement meilleur.
 
@@ -124,7 +124,7 @@ Gain faible car RF est assez robuste par défaut.
 
 Temps de calcul très élevé lors du Grid Search.
 
-## ⚡ AdaBoost
+##  AdaBoost
 
 Très sensible au nombre d’estimateurs.
 
@@ -132,7 +132,7 @@ Les gains restent faibles, modèle parfois limité par la nature des données.
 
 Mais amélioration constante en augmentant n_estimators.
 
-## 🚀 XGBoost
+## XGBoost
 
 Meilleures performances globales, même avant optimisation.
 
@@ -140,7 +140,7 @@ L’optimisation ne change que très peu l’accuracy : le modèle était déjà
 
 Temps d’entraînement très faible par rapport aux deux autres (implémentation optimisée).
 
-# ✅ Conclusion générale
+# Conclusion générale
 
 XGBoost est le meilleur modèle, même sans optimisation poussée.
 
