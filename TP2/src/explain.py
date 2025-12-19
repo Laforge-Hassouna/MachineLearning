@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score
 
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from xgboost import XGBClassifier
@@ -23,10 +23,10 @@ LABELS_PATH = "../Dataset/alt_acsincome_ca_labels_85.csv"
 RANDOM_STATE = 42
 TEST_SIZE = 0.25
 
-# IMPORTANT: to avoid joblib memory crashes
-N_REPEATS = 5       # 5 is enough for a TP
-N_JOBS = 1          # avoid parallel workers killed by OS
-SAMPLE_TEST = 10000 # evaluate permutation importance on a subset of test
+# IMPORTANT: to avoid memory issues
+N_REPEATS = 5        # number of permutations
+N_JOBS = 1           # avoid OS killing parallel jobs
+SAMPLE_TEST = 10000  # subset of test set
 TOPK = 20
 
 
@@ -37,8 +37,12 @@ def save_topk_plot(importances_df, model_name, outdir, topk=20):
     top = importances_df.head(topk).iloc[::-1]
 
     plt.figure(figsize=(9, 6))
-    plt.barh(top["feature"], top["importance_mean"], xerr=top["importance_std"])
-    plt.xlabel("Baisse moyenne du F1 après permutation")
+    plt.barh(
+        top["feature"],
+        top["importance_mean"],
+        xerr=top["importance_std"]
+    )
+    plt.xlabel("Baisse moyenne de l’accuracy après permutation")
     plt.title(f"Permutation Feature Importance (Top {topk}) – {model_name}")
     plt.tight_layout()
     plt.savefig(os.path.join(outdir, "perm_importance_top20.png"))
@@ -47,12 +51,20 @@ def save_topk_plot(importances_df, model_name, outdir, topk=20):
 
 def save_grouped_plot(importances_df, model_name, outdir, topk=15):
     tmp = importances_df.copy()
+
+    # group one-hot encoded features by prefix
     tmp["group"] = tmp["feature"].apply(lambda s: str(s).split("_")[0])
-    grouped = tmp.groupby("group")["importance_mean"].sum().sort_values(ascending=False).head(topk)
+
+    grouped = (
+        tmp.groupby("group")["importance_mean"]
+        .sum()
+        .sort_values(ascending=False)
+        .head(topk)
+    )
 
     plt.figure(figsize=(8, 5))
     grouped.iloc[::-1].plot(kind="barh")
-    plt.xlabel("Somme des importances (groupées)")
+    plt.xlabel("Somme des baisses d’accuracy (groupées)")
     plt.title(f"Permutation Importance groupée (Top {topk}) – {model_name}")
     plt.tight_layout()
     plt.savefig(os.path.join(outdir, "perm_importance_grouped_top15.png"))
@@ -63,15 +75,15 @@ def run_perm_importance(model, model_name, X_train, y_train, X_test, y_test):
     outdir = os.path.join(EXP6_DIR, model_name.lower())
     os.makedirs(outdir, exist_ok=True)
 
-    # train
+    # Train model
     model.fit(X_train, y_train)
 
-    # baseline F1
+    # Baseline accuracy
     y_pred = model.predict(X_test)
-    baseline_f1 = f1_score(y_test, y_pred)
-    print(f"\n[{model_name}] Baseline F1 (test) = {baseline_f1:.4f}")
+    baseline_acc = accuracy_score(y_test, y_pred)
+    print(f"\n[{model_name}] Baseline Accuracy (test) = {baseline_acc:.4f}")
 
-    # --- subset test to avoid memory issues ---
+    # Subsample test set for permutation importance
     if len(X_test) > SAMPLE_TEST:
         X_eval = X_test.sample(n=SAMPLE_TEST, random_state=RANDOM_STATE)
         y_eval = y_test.loc[X_eval.index]
@@ -80,27 +92,33 @@ def run_perm_importance(model, model_name, X_train, y_train, X_test, y_test):
         X_eval = X_test
         y_eval = y_test
 
-    # permutation importance (robust settings)
+    # Permutation importance (accuracy-based)
     perm = permutation_importance(
         model,
         X_eval,
         y_eval,
-        scoring="f1",
+        scoring="accuracy",
         n_repeats=N_REPEATS,
         random_state=RANDOM_STATE,
         n_jobs=N_JOBS
     )
 
-    importances = pd.DataFrame({
-        "feature": X_eval.columns,
-        "importance_mean": perm.importances_mean,
-        "importance_std": perm.importances_std
-    }).sort_values("importance_mean", ascending=False)
+    importances = (
+        pd.DataFrame({
+            "feature": X_eval.columns,
+            "importance_mean": perm.importances_mean,
+            "importance_std": perm.importances_std
+        })
+        .sort_values("importance_mean", ascending=False)
+    )
 
-    # save CSV
-    importances.to_csv(os.path.join(outdir, "perm_importance_all.csv"), index=False)
+    # Save CSV
+    importances.to_csv(
+        os.path.join(outdir, "perm_importance_all.csv"),
+        index=False
+    )
 
-    # plots
+    # Save plots
     save_topk_plot(importances, model_name, outdir, topk=TOPK)
     save_grouped_plot(importances, model_name, outdir, topk=15)
 
@@ -117,14 +135,15 @@ def main():
     y = pd.read_csv(LABELS_PATH).iloc[:, 0]
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
+        X,
+        y,
         test_size=TEST_SIZE,
         shuffle=True,
         random_state=RANDOM_STATE,
         stratify=y
     )
 
-    # Best models (use your Exp2 best params)
+    # Best models (from Exp2)
     best_rf = RandomForestClassifier(
         random_state=RANDOM_STATE,
         n_estimators=300,
@@ -151,9 +170,9 @@ def main():
         "XGBoost": best_xgb
     }
 
-    print("=== EXP6 : Permutation Feature Importance ===")
+    print("=== EXP6 : Permutation Feature Importance (Accuracy) ===")
     print(f"Train: {X_train.shape} | Test: {X_test.shape}")
-    print(f"Scoring: F1 | n_repeats={N_REPEATS} | n_jobs={N_JOBS}")
+    print(f"Scoring: Accuracy | n_repeats={N_REPEATS} | n_jobs={N_JOBS}")
 
     for name, model in models.items():
         run_perm_importance(model, name, X_train, y_train, X_test, y_test)
